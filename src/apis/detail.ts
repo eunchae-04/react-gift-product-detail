@@ -1,5 +1,10 @@
 import axios from 'axios';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import {
+  mockProductInfo,
+  mockProductDetail,
+  mockProductReviews,
+} from '../mocks/mockData';
 
 // 1. 상품 기본 정보
 export interface ProductInfo {
@@ -21,10 +26,16 @@ export interface ProductInfo {
 export const fetchProductInfo = async (
   productId: string
 ): Promise<ProductInfo> => {
-  const res = await axios.get<{ data: ProductInfo }>(
-    `/api/products/${productId}`
-  );
-  return res.data.data;
+  try {
+    const res = await axios.get<{ data: ProductInfo }>(
+      `/api/products/${productId}`
+    );
+    return res.data.data;
+  } catch {
+    // API 호출 실패 시 목데이터 반환
+    console.warn('상품 정보 API 호출 실패, 목데이터 사용');
+    return mockProductInfo;
+  }
 };
 
 export const useProductInfo = (productId: string) =>
@@ -48,10 +59,16 @@ export interface ProductDetail {
 export const fetchProductDetail = async (
   productId: string
 ): Promise<ProductDetail> => {
-  const res = await axios.get<{ data: ProductDetail }>(
-    `/api/products/${productId}/detail`
-  );
-  return res.data.data;
+  try {
+    const res = await axios.get<{ data: ProductDetail }>(
+      `/api/products/${productId}/detail`
+    );
+    return res.data.data;
+  } catch {
+    // API 호출 실패 시 목데이터 반환
+    console.warn('상품 상세 정보 API 호출 실패, 목데이터 사용');
+    return mockProductDetail;
+  }
 };
 
 export const useProductDetail = (productId: string) =>
@@ -104,10 +121,22 @@ export interface HighlightReview {
 export const fetchHighlightReview = async (
   productId: string
 ): Promise<HighlightReview> => {
-  const res = await axios.get<{ data: HighlightReview }>(
-    `/api/products/${productId}/highlight-review`
-  );
-  return res.data.data;
+  try {
+    const res = await axios.get<{ data: HighlightReview }>(
+      `/api/products/${productId}/highlight-review`
+    );
+    return res.data.data;
+  } catch {
+    // API 호출 실패 시 목데이터 반환
+    console.warn('리뷰 API 호출 실패, 목데이터 사용');
+    return {
+      totalCount: mockProductReviews.reviews.length,
+      reviews: mockProductReviews.reviews.map((review, idx) => ({
+        id: `review-${idx}`,
+        ...review,
+      })),
+    };
+  }
 };
 
 export const useHighlightReview = (productId: string) =>

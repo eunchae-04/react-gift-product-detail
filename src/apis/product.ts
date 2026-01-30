@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { mockThemeProducts } from '../mocks/mockData';
 
 export interface RawProduct {
   id: number;
@@ -38,30 +39,46 @@ export const fetchThemeProducts = async (
   cursor: number,
   limit: number
 ): Promise<ThemeProductsResult> => {
-  const response = await axios.get<{ data: ThemeProductsResponse }>(
-    `/api/themes/${themeId}/products`,
-    {
-      params: { cursor, limit },
+  try {
+    const response = await axios.get<{ data: ThemeProductsResponse }>(
+      `/api/themes/${themeId}/products`,
+      {
+        params: { cursor, limit },
+      }
+    );
+
+    const { list, cursor: nextCursor, hasMoreList } = response.data.data;
+
+    if (!Array.isArray(list)) {
+      throw new Error('상품 리스트 형식이 올바르지 않습니다.');
     }
-  );
 
-  const { list, cursor: nextCursor, hasMoreList } = response.data.data;
+    const parsedProducts = list.map(
+      (item): ParsedProduct => ({
+        id: item.id,
+        imageUrl: item.imageURL,
+        name: item.name,
+        price: item.price.sellingPrice,
+        brand: item.brandInfo.name,
+      })
+    );
 
-  if (!Array.isArray(list)) {
-    throw new Error('상품 리스트 형식이 올바르지 않습니다.');
+    return { products: parsedProducts, nextCursor, hasMoreList };
+  } catch {
+    // API 호출 실패 시 목데이터 반환
+    console.warn('테마 상품 API 호출 실패, 목데이터 사용');
+    const { list, cursor: nextCursor, hasMoreList } = mockThemeProducts;
+    const parsedProducts = list.map(
+      (item): ParsedProduct => ({
+        id: item.id,
+        imageUrl: item.imageURL,
+        name: item.name,
+        price: item.price.sellingPrice,
+        brand: item.brandInfo.name,
+      })
+    );
+    return { products: parsedProducts, nextCursor, hasMoreList };
   }
-
-  const parsedProducts = list.map(
-    (item): ParsedProduct => ({
-      id: item.id,
-      imageUrl: item.imageURL,
-      name: item.name,
-      price: item.price.sellingPrice,
-      brand: item.brandInfo.name,
-    })
-  );
-
-  return { products: parsedProducts, nextCursor, hasMoreList };
 };
 
 export const useThemeProducts = (themeId: number, limit: number = 10) => {

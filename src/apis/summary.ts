@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { mockProductSummary } from '../mocks/mockData';
 
 export interface ProductSummary {
   id: number;
@@ -13,17 +14,23 @@ const fetchProductSummary = async (
   productId: string,
   authToken: string
 ): Promise<ProductSummary> => {
-  const response = await axios.get(`/api/products/${productId}/summary`, {
-    headers: {
-      Authorization: authToken ? `Bearer ${authToken}` : '',
-    },
-  });
+  try {
+    const response = await axios.get(`/api/products/${productId}/summary`, {
+      headers: {
+        Authorization: authToken ? `Bearer ${authToken}` : '',
+      },
+    });
 
-  if (!response.data?.data) {
-    throw new Error('제품 데이터를 불러오지 못했습니다.');
+    if (!response.data?.data) {
+      throw new Error('제품 데이터를 불러오지 못했습니다.');
+    }
+
+    return response.data.data;
+  } catch {
+    // API 호출 실패 시 목데이터 반환
+    console.warn('상품 요약 API 호출 실패, 목데이터 사용');
+    return mockProductSummary;
   }
-
-  return response.data.data;
 };
 
 export function useProductSummaryQuery(

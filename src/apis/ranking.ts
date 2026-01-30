@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { mockRankingProducts } from '../mocks/mockData';
 
 export type Price = {
   basicPrice: number;
@@ -42,17 +43,23 @@ export const fetchRanking = async (
   gender: string,
   giftType: string
 ): Promise<RankingItem[]> => {
-  const targetType = genderToTargetTypeMap[gender] || 'ALL';
-  const rankType = giftTypeToRankTypeMap[giftType] || 'MANY_WISH';
+  try {
+    const targetType = genderToTargetTypeMap[gender] || 'ALL';
+    const rankType = giftTypeToRankTypeMap[giftType] || 'MANY_WISH';
 
-  const response = await axios.get<RankingResponse>('/api/products/ranking', {
-    params: { targetType, rankType },
-  });
+    const response = await axios.get<RankingResponse>('/api/products/ranking', {
+      params: { targetType, rankType },
+    });
 
-  if (!response.data || !Array.isArray(response.data.data)) {
-    throw new Error('Unexpected API response structure');
+    if (!response.data || !Array.isArray(response.data.data)) {
+      throw new Error('Unexpected API response structure');
+    }
+    return response.data.data;
+  } catch {
+    // API 호출 실패 시 목데이터 반환
+    console.warn('랭킹 API 호출 실패, 목데이터 사용');
+    return mockRankingProducts;
   }
-  return response.data.data;
 };
 
 export const useSuspenseRanking = (gender: string, giftType: string) => {

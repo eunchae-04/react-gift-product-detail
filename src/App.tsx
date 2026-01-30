@@ -44,7 +44,7 @@ const RedirectIfLoggedIn = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_relativeSplatPath: true }}>
       <UserManagementProvider>
         <ScrollToTop />
         <NavBar />
